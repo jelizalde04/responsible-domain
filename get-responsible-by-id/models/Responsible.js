@@ -14,7 +14,7 @@ const Responsible = sequelize.define("Responsible", {
   email: {
     type: DataTypes.STRING,
     allowNull: false,
-    unique: true, 
+    unique: true,
   },
   password: {
     type: DataTypes.STRING,
@@ -23,6 +23,10 @@ const Responsible = sequelize.define("Responsible", {
   contact: {
     type: DataTypes.STRING,
     allowNull: true,
+  },
+  avatar: {
+    type: DataTypes.STRING,
+    allowNull: true, 
   },
 });
 

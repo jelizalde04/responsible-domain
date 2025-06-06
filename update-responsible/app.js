@@ -22,7 +22,7 @@ async function start() {
   try {
     await sequelize.authenticate();
     console.log('DB connected');
-    await sequelize.sync(); // crea tablas si no existen
+    await sequelize.sync({alter: true}); 
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
     });

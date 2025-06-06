@@ -1,6 +1,6 @@
 const Responsible = require("../models/Responsible");
 
-const updateResponsible = async (id, { name, email, password, contact }) => {
+const updateResponsible = async (id, { name, email, password, contact, avatar }) => {
   // Buscamos al responsable por ID
   const responsible = await Responsible.findByPk(id);
 
@@ -16,11 +16,12 @@ const updateResponsible = async (id, { name, email, password, contact }) => {
     }
   }
 
-  // Actualizamos el responsable con los nuevos datos
+  // Actualizamos el responsable con los nuevos datos, incluyendo avatar
   responsible.name = name || responsible.name;
   responsible.email = email || responsible.email;
   responsible.password = password || responsible.password;
   responsible.contact = contact || responsible.contact;
+  responsible.avatar = avatar || responsible.avatar;  // Ahora también actualizamos el avatar
 
   await responsible.save();
 

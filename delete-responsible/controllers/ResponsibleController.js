@@ -4,12 +4,13 @@ const deleteResponsible = async (req, res, next) => {
   try {
     const { id } = req.params;  // Obtenemos el ID del responsable desde los parámetros de la URL
 
-    // Llamamos al servicio para eliminar el responsable
-    const result = await ResponsibleService.deleteResponsible(id);
+    // Llamamos al servicio para obtener al responsable antes de eliminarlo
+    const responsible = await ResponsibleService.deleteResponsible(id);
 
-    if (result) {
+    if (responsible) {
       return res.status(200).json({
         message: "Responsable eliminado exitosamente.",
+        avatar: responsible.avatar,  // Devolvemos la URL del avatar antes de eliminar al responsable
       });
     } else {
       return res.status(404).json({ message: "Responsable no encontrado." });

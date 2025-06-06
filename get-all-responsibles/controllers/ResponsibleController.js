@@ -8,7 +8,7 @@ const getAllResponsibles = async (req, res, next) => {
     if (responsibles.length > 0) {
       return res.status(200).json({
         message: "Responsables encontrados.",
-        responsibles,  // Devolvemos los responsables encontrados
+        responsibles,  // Devolvemos los responsables encontrados, incluyendo el avatar
       });
     } else {
       return res.status(404).json({ message: "No se encontraron responsables." });  // Si no hay responsables

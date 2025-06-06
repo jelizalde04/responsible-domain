@@ -27,6 +27,12 @@ const validateResponsible = [
     .isString()
     .withMessage("El contacto debe ser una cadena de texto"),
 
+  // Validar el campo avatar (opcional, pero debe ser una cadena si se envía)
+  body("avatar")
+    .optional()  // Avatar es un campo opcional
+    .isString()
+    .withMessage("El avatar debe ser una cadena de texto (URL)"),
+
   // Comprobamos si hay errores y los respondemos
   (req, res, next) => {
     const errors = validationResult(req);

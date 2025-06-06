@@ -1,6 +1,6 @@
 const Responsible = require("../models/Responsible");
 
-const createResponsible = async ({ name, email, password, contact }) => {
+const createResponsible = async ({ name, email, password, contact, avatar }) => {  // Añadimos 'avatar'
   // Validamos que el nombre esté presente
   if (!name) {
     const error = new Error("El nombre del responsable es obligatorio.");
@@ -30,12 +30,13 @@ const createResponsible = async ({ name, email, password, contact }) => {
     throw error;
   }
 
-  // Creamos al responsable
+  // Creamos al responsable, incluyendo 'avatar'
   const responsible = await Responsible.create({
     name,
     email,
-    password, // En un escenario real, aquí deberías encriptar la contraseña
+    password, // Recuerda encriptar la contraseña en un caso real
     contact,
+    avatar,  // Guardamos el avatar en la base de datos
   });
 
   console.log(`Responsable creado exitosamente: ${responsible.id}`);

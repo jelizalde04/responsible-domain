@@ -40,6 +40,9 @@ const { validateResponsible } = require("../middlewares/validateResponsible");
  *               contact:
  *                 type: string
  *                 description: Información de contacto del responsable
+ *               avatar:  
+ *                 type: string
+ *                 description: URL del avatar
  *     responses:
  *       200:
  *         description: Responsable actualizado con éxito.

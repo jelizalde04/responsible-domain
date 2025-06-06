@@ -11,7 +11,7 @@ const getResponsibleById = async (req, res, next) => {
     if (responsible) {
       return res.status(200).json({
         message: "Responsable encontrado.",
-        responsible,  // Devolvemos los datos del responsable
+        responsible,  // Devolvemos los datos del responsable, incluyendo el avatar
       });
     } else {
       return res.status(404).json({ message: "Responsable no encontrado." });  // Error si no existe

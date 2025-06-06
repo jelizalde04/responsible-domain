@@ -24,6 +24,10 @@ const Responsible = sequelize.define("Responsible", {
     type: DataTypes.STRING,
     allowNull: true,
   },
+  avatar: {
+    type: DataTypes.STRING,
+    allowNull: true, 
+  },
 });
 
 module.exports = Responsible;

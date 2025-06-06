@@ -41,6 +41,9 @@ const ResponsibleController = require("../controllers/ResponsibleController");
  *                     contact:
  *                       type: string
  *                       description: Número de contacto del responsable
+ *                     avatar:
+ *                       type: string
+ *                       description: URL del avatar del responsable
  *       404:
  *         description: Responsable no encontrado.
  *       500:

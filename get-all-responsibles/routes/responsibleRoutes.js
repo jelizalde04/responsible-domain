@@ -26,12 +26,19 @@ const ResponsibleController = require("../controllers/ResponsibleController");
  *                     properties:
  *                       id:
  *                         type: string
+ *                         description: ID del responsable
  *                       name:
  *                         type: string
+ *                         description: Nombre del responsable
  *                       email:
  *                         type: string
+ *                         description: Correo electrónico del responsable
  *                       contact:
  *                         type: string
+ *                         description: Número de contacto del responsable
+ *                       avatar:
+ *                         type: string
+ *                         description: URL del avatar del responsable
  *       404:
  *         description: No se encontraron responsables.
  *       500:

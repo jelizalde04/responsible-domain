@@ -33,6 +33,9 @@ const { validateResponsible } = require("../middlewares/auth"); // Usamos la val
  *               contact:
  *                 type: string
  *                 description: Información de contacto del responsable
+ *               avatar:
+ *                 type: string
+ *                 description: URL del avatar (opcional)
  *     responses:
  *       201:
  *         description: Responsable registrado con éxito.
