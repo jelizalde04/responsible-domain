@@ -28,7 +28,7 @@ services:
     networks:
       - responsible_network
 
-  get-all-esponsibles:
+  get-all-eesponsibles:
     build:
       context: ./get-all-responsibles
     image: joeli2104/get-all-responsibles:latest
