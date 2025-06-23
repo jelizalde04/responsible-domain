@@ -93,7 +93,7 @@ jobs:
       uses: appleboy/ssh-action@v0.1.7
       with:
         # Retrieve EC2 instance connection details securely from GitHub secrets
-        host: ${{ secrets.EC2_PET_TEST }}
+        host: ${{ secrets.EC2_RESPONSIBLE_TEST }}
         username: ubuntu
         key: ${{ secrets.EC2_SSH_KEY }}
         port: 22
