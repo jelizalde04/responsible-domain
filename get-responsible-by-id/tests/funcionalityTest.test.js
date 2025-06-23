@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-describe('Create Responsible Microservice', () => {
+describe('Get Responsible By Id Microservice', () => {
   test('Functionality test completed successfully', () => {
     
       const filePath = path.join(__dirname, '../config/db.js');
