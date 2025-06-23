@@ -1,9 +1,9 @@
 const Responsible = require("../models/Responsible");
 
 const getResponsibleById = async (id) => {
-  const responsible = await Responsible.findByPk(id);  // Usamos `findByPk` para buscar por ID
+  const responsible = await Responsible.findByPk(id);  
 
-  return responsible;  // Si no lo encuentra, devolverá null por defecto
+  return responsible;  
 };
 
 module.exports = { getResponsibleById };

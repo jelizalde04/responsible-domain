@@ -12,7 +12,7 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/responsibles', responsibleRoutes);
+app.use('/responsibles', responsibleRoutes);
 app.use('/api-docs-getAllRes', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 

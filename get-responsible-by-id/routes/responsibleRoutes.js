@@ -1,21 +1,17 @@
 const express = require("express");
 const router = express.Router();
 const ResponsibleController = require("../controllers/ResponsibleController");
+const authenticateToken = require("../middlewares/auth");  // Middleware que decodifica el token
 
 /**
  * @swagger
- * /api/responsibles/{id}:
+ * /responsibles:
  *   get:
- *     summary: Obtener un responsable por ID
- *     description: Permite obtener la información de un responsable por su ID.
+ *     summary: Obtener el responsable autenticado
+ *     description: Retorna la información del responsable autenticado mediante el token.
  *     tags: [Responsibles]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         description: ID único del responsable.
- *         schema:
- *           type: string
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Responsable encontrado.
@@ -31,24 +27,23 @@ const ResponsibleController = require("../controllers/ResponsibleController");
  *                   properties:
  *                     id:
  *                       type: string
- *                       description: ID del responsable
  *                     name:
  *                       type: string
- *                       description: Nombre del responsable
  *                     email:
  *                       type: string
- *                       description: Correo electrónico del responsable
  *                     contact:
  *                       type: string
- *                       description: Número de contacto del responsable
  *                     avatar:
  *                       type: string
- *                       description: URL del avatar del responsable
+ *       401:
+ *         description: Token no proporcionado.
+ *       403:
+ *         description: Token inválido o expirado.
  *       404:
  *         description: Responsable no encontrado.
  *       500:
  *         description: Error interno del servidor.
  */
-router.get("/:id", ResponsibleController.getResponsibleById);  // Solo se mantendrá esta ruta
+router.get("/", authenticateToken, ResponsibleController.getResponsibleById);
 
 module.exports = router;

@@ -12,23 +12,27 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/responsibles', responsibleRoutes);
+app.use('/responsibles', responsibleRoutes);
 app.use('/api-docs-updateRes', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 
-const PORT = process.env.PORT || 2002;
 
-async function start() {
-  try {
-    await sequelize.authenticate();
-    console.log('DB connected');
-    await sequelize.sync({alter: true}); 
+sequelize.authenticate()
+  .then(() => {
+    console.log("Conexión a la base de datos establecida correctamente");
+    return sequelize.sync();
+  })
+  .then(() => {
+    console.log("Modelos sincronizados con la base de datos");
+
+    const PORT = process.env.PORT || 2002;
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+      console.log(`Servicio de actualización de responsables corriendo en puerto ${PORT}`);
     });
-  } catch (error) {
-    console.error('Unable to connect to DB:', error);
-  }
-}
+  })
+  .catch(error => {
+    console.error("Error al iniciar el servicio:", error);
+    process.exit(1);
+  });
 
-start();
+module.exports = app;

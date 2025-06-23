@@ -1,34 +1,49 @@
-require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
-const sequelize = require('./config/db');
+const { petDb, responsibleDb } = require('./config/db');
 const swaggerUi = require('swagger-ui-express');
 const swaggerSpec = require('./swagger');
-
 const responsibleRoutes = require('./routes/responsibleRoutes');
 
 const app = express();
+const PORT = process.env.PORT || 2005;
+
 
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/responsibles', responsibleRoutes);
+
+app.use('/responsibles', responsibleRoutes);
+
+
 app.use('/api-docs-deleteRes', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 
-const PORT = process.env.PORT || 2005;
-
-async function start() {
+async function startServer() {
   try {
-    await sequelize.authenticate();
-    console.log('DB connected');
-    await sequelize.sync({alter: true}); 
+   
+    await petDb.authenticate();
+    console.log('✅ Conexión exitosa a la base de datos de mascotas.');
+
+    
+    await responsibleDb.authenticate();
+    console.log('✅ Conexión exitosa a la base de datos de responsables.');
+
+   
+    await petDb.sync({ alter: true });  
+    await responsibleDb.sync({ alter: true });
+    console.log('🔄 Bases de datos sincronizadas.');
+
+    
     app.listen(PORT, () => {
-      console.log(`Server running on port ${PORT}`);
+      console.log(`🚀 Servidor corriendo en el puerto ${PORT}`);
     });
-  } catch (error) {
-    console.error('Unable to connect to DB:', error);
+
+  } catch (err) {
+    console.error('❌ Error al conectar o sincronizar las bases de datos:');
+    console.error(err);
+    process.exit(1);
   }
 }
 
-start();
+startServer();

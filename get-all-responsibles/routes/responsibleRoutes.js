@@ -1,10 +1,9 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const ResponsibleController = require("../controllers/ResponsibleController");
-
+const ResponsibleController = require('../controllers/ResponsibleController');
 /**
  * @swagger
- * /api/responsibles:
+ * /responsibles:
  *   get:
  *     summary: Obtener todos los responsables
  *     description: Permite obtener una lista de todos los responsables.
@@ -44,6 +43,6 @@ const ResponsibleController = require("../controllers/ResponsibleController");
  *       500:
  *         description: Error interno del servidor.
  */
-router.get("/", ResponsibleController.getAllResponsibles);  // Ruta para obtener todos los responsables
+router.get("/", ResponsibleController.getAllResponsibles);  
 
 module.exports = router;

@@ -1,10 +1,23 @@
-const Responsible = require("../models/Responsible");
+const Responsible = require("../models/Responsible"); 
 
 const getAllResponsibles = async () => {
-  // Usamos findAll para obtener todos los responsables de la base de datos
-  const responsibles = await Responsible.findAll();  // Obtenemos todos los responsables
+  try {
+   
+    const responsibles = await Responsible.findAll();
 
-  return responsibles;  // Retorna todos los responsables, incluido el avatar
+    if (!responsibles || responsibles.length === 0) {
+     
+      const error = new Error("No se encontraron responsables.");
+      error.status = 404;
+      throw error; 
+    }
+
+    return responsibles; 
+  } catch (error) {
+    console.error("Error al obtener los responsables:", error.message);
+   
+    throw new Error("Error al obtener los responsables.");
+  }
 };
 
-module.exports = { getAllResponsibles };  // Asegúrate de exportar correctamente
+module.exports = { getAllResponsibles };

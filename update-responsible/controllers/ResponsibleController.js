@@ -1,27 +1,29 @@
-const { validationResult } = require("express-validator"); // Asegúrate de que esté importado
+const { validationResult } = require("express-validator");
 const ResponsibleService = require("../services/ResponsibleService");
 
-const updateResponsible = async (req, res, next) => {
+const updateResponsible = async (req, res) => {
   try {
-    // Validar los errores de entrada
-    const errors = validationResult(req); // Verifica si hay errores en los datos de entrada
+  
+    const errors = validationResult(req); 
     if (!errors.isEmpty()) {
-      const error = new Error("Datos de entrada inválidos");
-      error.status = 400;
-      error.details = errors.array(); 
-      return next(error); // Si hay errores, pasamos al manejador de errores
+      return res.status(400).json({
+        error: "Datos de entrada inválidos",
+        details: errors.array(),
+      });
     }
 
-    const { id } = req.params;
+    
+    const authenticatedUserId = req.user?.id;
+
     const { name, email, password, contact, avatar } = req.body;
 
-    // Llamar al servicio para actualizar el responsable
-    const updatedResponsible = await ResponsibleService.updateResponsible(id, {
+ 
+    const updatedResponsible = await ResponsibleService.updateResponsible(authenticatedUserId, {
       name,
       email,
       password,
       contact,
-      avatar, // Incluye el avatar
+      avatar,
     });
 
     if (updatedResponsible) {
@@ -30,11 +32,16 @@ const updateResponsible = async (req, res, next) => {
         responsible: updatedResponsible,
       });
     } else {
-      return res.status(404).json({ message: "Responsable no encontrado." });
+      return res.status(404).json({
+        error: "Responsable no encontrado.",
+      });
     }
   } catch (error) {
     console.error(error);
-    return next(error);
+    return res.status(500).json({
+      error: "Error interno del servidor",
+      details: error.message,
+    });
   }
 };
 

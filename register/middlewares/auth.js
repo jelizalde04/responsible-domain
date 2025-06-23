@@ -1,60 +1,60 @@
 const { body, validationResult } = require("express-validator");
 const Responsible = require("../models/Responsible");
 
-// Middleware para validar el registro del responsable
+// Middleware to validate responsible registration
 const validateResponsible = [
-  // Validar que el nombre no esté vacío y tenga un tamaño mínimo
+  // Validate that the name is not empty and has a minimum length
   body("name")
     .notEmpty()
     .withMessage("El nombre es obligatorio")
     .isLength({ min: 3 })
     .withMessage("El nombre debe tener al menos 3 caracteres"),
 
-  // Validar el formato del email
+  // Validate the email format
   body("email")
     .notEmpty()
     .withMessage("El email es obligatorio")
     .isEmail()
     .withMessage("El formato del email no es válido")
-    .normalizeEmail(), // Normaliza el email (convertirlo en minúsculas, etc.)
+    .normalizeEmail(), // Normalize the email (convert to lowercase, etc.)
 
-  // Validar la contraseña (mínimo de 6 caracteres, por ejemplo)
+  // Validate the password (minimum 6 characters, for example)
   body("password")
     .notEmpty()
     .withMessage("La contraseña es obligatoria")
     .isLength({ min: 6 })
     .withMessage("La contraseña debe tener al menos 6 caracteres"),
 
-  // Validar el campo de contacto (opcional, si se ingresa, debe ser un texto)
+  // Validate the contact field (optional, if provided, must be a string)
   body("contact")
     .optional()
     .isString()
     .withMessage("El contacto debe ser una cadena de texto"),
 
-  // Comprobamos si hay errores y los respondemos
+  // Check for errors and respond if any
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
       const error = new Error("Datos de entrada inválidos");
       error.status = 400;
-      error.details = errors.array(); // Agregamos los detalles de los errores de validación
-      return next(error); // Pasamos el error al middleware de manejo de errores
+      error.details = errors.array(); // Add validation error details
+      return next(error); // Pass the error to the error handling middleware
     }
     next();
   },
 ];
 
-// Middleware para manejar errores
+// Middleware to handle errors
 const errorHandler = (err, req, res, next) => {
-  // Si no hay un código de estado, asignamos el 500 por defecto
+  // If there is no status code, assign 500 by default
   const statusCode = err.status || 500;
-  const message = err.message || "Error interno del servidor";
+  const message = err.message || "Internal server error";
   const details = err.details || null;
 
-  // Responder con el código de estado y mensaje
+  // Respond with the status code and message
   res.status(statusCode).json({
     error: message,
-    details: details, // Incluimos los detalles de validación en caso de errores de entrada
+    details: details, // Include validation details in case of input errors
   });
 };
 

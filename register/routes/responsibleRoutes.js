@@ -1,11 +1,11 @@
 const express = require("express");
 const router = express.Router();
 const ResponsibleController = require("../controllers/ResponsibleController");
-const { validateResponsible } = require("../middlewares/auth"); // Usamos la validación desde auth.js
+const { validateResponsible } = require("../middlewares/auth"); 
 
 /**
  * @swagger
- * /api/responsibles/register:
+ * /responsibles/register:
  *   post:
  *     summary: Registra un nuevo responsable
  *     description: Crea una nueva cuenta para un responsable en el sistema.

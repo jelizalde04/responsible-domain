@@ -1,24 +1,32 @@
-const ResponsibleService = require("../services/ResponsibleService");
+const { deleteResponsible } = require("../services/ResponsibleService");
 
-const deleteResponsible = async (req, res, next) => {
+const handleDeleteResponsible = async (req, res) => {
   try {
-    const { id } = req.params;  // Obtenemos el ID del responsable desde los parámetros de la URL
+    const authenticatedUserId = req.user?.id;  
 
-    // Llamamos al servicio para obtener al responsable antes de eliminarlo
-    const responsible = await ResponsibleService.deleteResponsible(id);
-
-    if (responsible) {
-      return res.status(200).json({
-        message: "Responsable eliminado exitosamente.",
-        avatar: responsible.avatar,  // Devolvemos la URL del avatar antes de eliminar al responsable
+   
+    if (authenticatedUserId !== req.user?.id) {
+      return res.status(403).json({
+        error: "No tienes permiso para eliminar este responsable.",
       });
-    } else {
-      return res.status(404).json({ message: "Responsable no encontrado." });
     }
+
+    const responsible = await deleteResponsible(authenticatedUserId);  
+
+    return res.status(200).json({
+      message: "Responsable y sus mascotas eliminados exitosamente.",
+      avatar: responsible.avatar,
+    });
   } catch (error) {
     console.error(error);
-    return next(error);  // Pasamos el error al middleware de manejo de errores
+    if (error.message === "Responsable no encontrado") {
+      return res.status(404).json({ error: error.message });
+    }
+    return res.status(500).json({
+      error: "Error interno del servidor",
+      details: error.message,
+    });
   }
 };
 
-module.exports = { deleteResponsible };
+module.exports = { handleDeleteResponsible };

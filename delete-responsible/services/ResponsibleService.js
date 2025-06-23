@@ -1,28 +1,64 @@
+const { responsibleDb, petDb } = require("../config/db");
 const Responsible = require("../models/Responsible");
-const fs = require('fs');
-const path = require('path');
+const Pet = require("../models/Pet");
+const axios = require("axios");
 
 const deleteResponsible = async (id) => {
-  // Obtenemos el responsable con el avatar
-  const responsible = await Responsible.findByPk(id);
 
-  if (!responsible) {
-    throw new Error("Responsable no encontrado");
-  }
+  const petTransaction = await petDb.transaction();
+  const responsibleTransaction = await responsibleDb.transaction();
 
-  // Si existe el avatar, podemos eliminar el archivo si es necesario
-  if (responsible.avatar) {
-    const avatarPath = path.join(__dirname, '..', 'uploads', responsible.avatar);  // Cambia esta ruta dependiendo de tu estructura de carpetas
+  try {
+    
+    await Pet.destroy({
+      where: { responsibleId: id },
+      transaction: petTransaction,
+    });
 
-    // Eliminar el archivo del sistema (si existe)
-    if (fs.existsSync(avatarPath)) {
-      fs.unlinkSync(avatarPath);  // Elimina el archivo de la carpeta de uploads
+    
+    const responsible = await Responsible.findByPk(id, {
+      transaction: responsibleTransaction,
+    });
+
+    if (!responsible) {
+      throw new Error("Responsable no encontrado");
     }
-  }
 
-  // Eliminar el responsable de la base de datos
-  await responsible.destroy();
-  return responsible;  // Retornamos el responsable eliminado para usarlo en el controlador si se necesita el avatar
+    te
+    if (responsible.avatar) {
+      const avatarUrl = responsible.avatar;
+      
+      const fileName = avatarUrl.split('/').pop();
+
+      const deleteUrl = `https://${process.env.S3_BUCKET_NAME}.s3.amazonaws.com/${fileName}`;
+
+      try {
+        const response = await axios.delete(deleteUrl);
+        if (response.status !== 204) {
+          throw new Error("Error al eliminar la imagen de S3");
+        }
+        console.log('Avatar eliminado correctamente de S3');
+      } catch (error) {
+        console.error('Error al eliminar la imagen de S3:', error);
+        throw new Error('Error al eliminar la imagen de S3');
+      }
+    }
+
+    
+    await responsible.destroy({ transaction: responsibleTransaction });
+
+
+    await petTransaction.commit();
+    await responsibleTransaction.commit();
+
+    return responsible;
+  } catch (error) {
+    
+    await petTransaction.rollback();
+    await responsibleTransaction.rollback();
+
+    throw error;
+  }
 };
 
 module.exports = { deleteResponsible };

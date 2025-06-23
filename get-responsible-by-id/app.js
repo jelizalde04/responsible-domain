@@ -12,8 +12,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use('/api/responsibles', responsibleRoutes);
-app.use('/api-docs-getRes', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/responsibles', responsibleRoutes);
+app.use('/api-docs-getResId', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 
 const PORT = process.env.PORT || 2003;

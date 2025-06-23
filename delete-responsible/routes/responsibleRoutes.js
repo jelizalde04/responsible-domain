@@ -1,22 +1,17 @@
 const express = require("express");
 const router = express.Router();
-const ResponsibleController = require("../controllers/ResponsibleController");
-const { validateId } = require("../middlewares/validateResponsible");  // Middleware para validar el ID
+const ResponsibleController = require("../controllers/ResponsibleController");  
+const authenticateToken = require("../middlewares/auth");  
 
 /**
  * @swagger
- * /api/responsibles/{id}:
+ * /responsibles:
  *   delete:
- *     summary: Eliminar un responsable
- *     description: Permite eliminar un responsable por su ID.
+ *     summary: Eliminar un responsable autenticado
+ *     description: Permite eliminar el responsable autenticado (basado en token).
  *     tags: [Responsibles]
- *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         description: ID único del responsable a eliminar.
- *         schema:
- *           type: string
+ *     security:
+ *       - bearerAuth: []
  *     responses:
  *       200:
  *         description: Responsable eliminado exitosamente.
@@ -25,6 +20,7 @@ const { validateId } = require("../middlewares/validateResponsible");  // Middle
  *       500:
  *         description: Error interno del servidor.
  */
-router.delete("/:id", validateId, ResponsibleController.deleteResponsible);  // Ruta para eliminar un responsable
+
+router.delete("/", authenticateToken, ResponsibleController.handleDeleteResponsible);  
 
 module.exports = router;

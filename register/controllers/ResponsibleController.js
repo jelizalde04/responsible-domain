@@ -2,7 +2,7 @@ const ResponsibleService = require("../services/ResponsibleService");
 
 const registerResponsible = async (req, res, next) => {
   try {
-    const { name, email, password, contact, avatar } = req.body; // Incluimos 'avatar' aquí
+    const { name, email, password, contact, avatar } = req.body; 
     const responsible = await ResponsibleService.createResponsible({
       name,
       email,
