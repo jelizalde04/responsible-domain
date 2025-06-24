@@ -19,7 +19,7 @@ jobs:
   # Job para Register
   deploy_register:
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.message, 'register')
+    if: ${{ contains(github.event.head_commit.message, 'register') || github.event_name == 'push' && contains(join(github.event.commits.*.modified, ','), 'register/') }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -82,7 +82,7 @@ jobs:
   # Job para Update Responsible
   deploy_update_responsible:
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.message, 'update-responsible')
+    if: ${{ contains(github.event.head_commit.message, 'update-responsible') || github.event_name == 'push' && contains(join(github.event.commits.*.modified, ','), 'update-responsible/') }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -145,7 +145,7 @@ jobs:
   # Job para Get Responsible by ID
   deploy_get_responsible_by_id:
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.message, 'get-responsible-by-id')
+    if: ${{ contains(github.event.head_commit.message, 'get-responsible-by-id') || github.event_name == 'push' && contains(join(github.event.commits.*.modified, ','), 'get-responsible-by-id/') }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -208,7 +208,7 @@ jobs:
   # Job para Get All Responsibles
   deploy_get_all_responsibles:
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.message, 'get-all-responsibles')
+    if: ${{ contains(github.event.head_commit.message, 'get-all-responsibles') || github.event_name == 'push' && contains(join(github.event.commits.*.modified, ','), 'get-all-responsibles/') }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -271,7 +271,7 @@ jobs:
   # Job para Delete Responsible
   deploy_delete_responsible:
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.message, 'delete-responsible')
+    if: ${{ contains(github.event.head_commit.message, 'delete-responsible') || github.event_name == 'push' && contains(join(github.event.commits.*.modified, ','), 'delete-responsible/') }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -334,7 +334,7 @@ jobs:
   # Job para Upload Avatar
   deploy_upload_avatar:
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.message, 'upload-avatar')
+    if: ${{ contains(github.event.head_commit.message, 'upload-avatar') || github.event_name == 'push' && contains(join(github.event.commits.*.modified, ','), 'upload-avatar/') }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -397,7 +397,7 @@ jobs:
   # Job para Update Avatar
   deploy_update_avatar:
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.message, 'update-avatar')
+    if: ${{ contains(github.event.head_commit.message, 'update-avatar') || github.event_name == 'push' && contains(join(github.event.commits.*.modified, ','), 'update-avatar/') }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -460,7 +460,7 @@ jobs:
   # Job para Get All Avatars
   deploy_get_all_avatars:
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.message, 'get-all-avatars')
+    if: ${{ contains(github.event.head_commit.message, 'get-all-avatars') || github.event_name == 'push' && contains(join(github.event.commits.*.modified, ','), 'get-all-avatars/') }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
@@ -523,7 +523,7 @@ jobs:
   # Job para Delete Avatar
   deploy_delete_avatar:
     runs-on: ubuntu-latest
-    if: contains(github.event.head_commit.message, 'delete-avatar')
+    if: ${{ contains(github.event.head_commit.message, 'delete-avatar') || github.event_name == 'push' && contains(join(github.event.commits.*.modified, ','), 'delete-avatar/') }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
