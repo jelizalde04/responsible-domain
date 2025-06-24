@@ -4,56 +4,63 @@ on:
   push:
     branches:
       - test
-    paths:
-      - 'register/**'
-      - 'update-responsible/**'
-      - 'get-responsible-by-id/**'
-      - 'get-all-responsibles/**'
-      - 'delete-responsible/**'
-      - 'upload-avatar/**'
-      - 'update-avatar/**'
-      - 'get-all-avatars/**'
-      - 'delete-avatar/**'
 
 jobs:
-  # Job para Register
-  deploy_register:
+  build_and_deploy:
     runs-on: ubuntu-latest
-    if: ${{ contains(github.event.head_commit.message, 'register') || github.event_name == 'push' && contains(join(github.event.commits.*.modified, ','), 'register/') }}
     steps:
       - name: Check out code
         uses: actions/checkout@v2
 
       - name: Log in to Docker Hub
-        run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+        run: echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
-      - name: Install Docker
+      - name: Install Docker Compose
         run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
+          sudo apt-get update -y
+          sudo apt-get install -y jq
+          sudo curl -L "https://github.com/docker/compose/releases/download/$(curl -s https://api.github.com/repos/docker/compose/releases/latest | jq -r .tag_name)/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          docker-compose --version
 
-      - name: Install dependencies and run tests for register
+      - name: Install dependencies and run tests for all microservices
         run: |
-          cd register
-          npm install
-          npm test
+          for dir in register update-responsible get-responsible-by-id get-all-responsibles delete-responsible upload-avatar update-avatar get-all-avatars delete-avatar; do
+            cd $dir
+            npm install
+            npm test
+            cd ..
+          done
 
-      - name: Build Docker image for register
+      - name: Build Docker images using Docker Compose
         run: |
-          docker build -t joeli2104/register:latest ./register
+          docker-compose -f docker-compose-pet-domain.yml build
 
-      - name: Push Docker image for register
+      - name: Push Docker images to Docker Hub
         run: |
-          docker push joeli2104/register:latest
+          docker-compose -f docker-compose-pet-domain.yml push
 
-      - name: Deploy register to EC2 via SSH
+      - name: Clean up existing containers on EC2
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.EC2_RESPONSIBLE_TEST }}
           username: ubuntu
           key: ${{ secrets.EC2_SSH_KEY }}
           port: 22
+          debug: true
+          script: |
+            docker stop $(docker ps -aq) || true
+            docker rm $(docker ps -aq) || true
+            docker system prune -af || true
+
+      - name: Deploy new containers to EC2 via SSH
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_RESPONSIBLE_TEST }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY }}
+          port: 22
+          debug: true
           script: |
             export DB_HOST=${{ secrets.DB_HOST }}
             export DB_USER=${{ secrets.DB_USER }}
@@ -64,521 +71,111 @@ jobs:
             export S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
             export AWS_REGION=${{ secrets.AWS_REGION }}
             export PET_DB_NAME=${{ secrets.PET_DB_NAME }}
-            docker stop register || true
-            docker rm register || true
             docker run -d --name register \
               -p 2001:2001 \
-              -e DB_HOST=${{ secrets.DB_HOST }} \
-              -e DB_USER=${{ secrets.DB_USER }} \
-              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-              -e DB_NAME=${{ secrets.DB_NAME }} \
-              -e RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }} \
-              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-              -e S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }} \
-              -e AWS_REGION=${{ secrets.AWS_REGION }} \
-              -e PET_DB_NAME=${{ secrets.PET_DB_NAME }} \
+              -e DB_HOST=${DB_HOST} \
+              -e DB_USER=${DB_USER} \
+              -e DB_PASSWORD=${DB_PASSWORD} \
+              -e DB_NAME=${DB_NAME} \
+              -e RESPONSIBLE_DB_NAME=${RESPONSIBLE_DB_NAME} \
+              -e JWT_SECRET=${JWT_SECRET} \
+              -e S3_BUCKET_NAME=${S3_BUCKET_NAME} \
+              -e AWS_REGION=${AWS_REGION} \
+              -e PET_DB_NAME=${PET_DB_NAME} \
               joeli2104/register:latest
-
-  # Job para Update Responsible
-  deploy_update_responsible:
-    runs-on: ubuntu-latest
-    if: ${{ contains(github.event.head_commit.message, 'update-responsible') || github.event_name == 'push' && contains(join(github.event.commits.*.modified, ','), 'update-responsible/') }}
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Log in to Docker Hub
-        run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
-
-      - name: Install dependencies and run tests for update-responsible
-        run: |
-          cd update-responsible
-          npm install
-          npm test
-
-      - name: Build Docker image for update-responsible
-        run: |
-          docker build -t joeli2104/update-responsible:latest ./update-responsible
-
-      - name: Push Docker image for update-responsible
-        run: |
-          docker push joeli2104/update-responsible:latest
-
-      - name: Deploy update-responsible to EC2 via SSH
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_RESPONSIBLE_TEST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script: |
-            export DB_HOST=${{ secrets.DB_HOST }}
-            export DB_USER=${{ secrets.DB_USER }}
-            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            export DB_NAME=${{ secrets.DB_NAME }}
-            export RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }}
-            export JWT_SECRET=${{ secrets.JWT_SECRET }}
-            export S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
-            export AWS_REGION=${{ secrets.AWS_REGION }}
-            export PET_DB_NAME=${{ secrets.PET_DB_NAME }}
-            docker stop update-responsible || true
-            docker rm update-responsible || true
             docker run -d --name update-responsible \
               -p 2002:2002 \
-              -e DB_HOST=${{ secrets.DB_HOST }} \
-              -e DB_USER=${{ secrets.DB_USER }} \
-              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-              -e DB_NAME=${{ secrets.DB_NAME }} \
-              -e RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }} \
-              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-              -e S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }} \
-              -e AWS_REGION=${{ secrets.AWS_REGION }} \
-              -e PET_DB_NAME=${{ secrets.PET_DB_NAME }} \
+              -e DB_HOST=${DB_HOST} \
+              -e DB_USER=${DB_USER} \
+              -e DB_PASSWORD=${DB_PASSWORD} \
+              -e DB_NAME=${DB_NAME} \
+              -e RESPONSIBLE_DB_NAME=${RESPONSIBLE_DB_NAME} \
+              -e JWT_SECRET=${JWT_SECRET} \
+              -e S3_BUCKET_NAME=${S3_BUCKET_NAME} \
+              -e AWS_REGION=${AWS_REGION} \
+              -e PET_DB_NAME=${PET_DB_NAME} \
               joeli2104/update-responsible:latest
-
-  # Job para Get Responsible by ID
-  deploy_get_responsible_by_id:
-    runs-on: ubuntu-latest
-    if: ${{ contains(github.event.head_commit.message, 'get-responsible-by-id') || github.event_name == 'push' && contains(join(github.event.commits.*.modified, ','), 'get-responsible-by-id/') }}
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Log in to Docker Hub
-        run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
-
-      - name: Install dependencies and run tests for get-responsible-by-id
-        run: |
-          cd get-responsible-by-id
-          npm install
-          npm test
-
-      - name: Build Docker image for get-responsible-by-id
-        run: |
-          docker build -t joeli2104/get-responsible-by-id:latest ./get-responsible-by-id
-
-      - name: Push Docker image for get-responsible-by-id
-        run: |
-          docker push joeli2104/get-responsible-by-id:latest
-
-      - name: Deploy get-responsible-by-id to EC2 via SSH
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_RESPONSIBLE_TEST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script: |
-            export DB_HOST=${{ secrets.DB_HOST }}
-            export DB_USER=${{ secrets.DB_USER }}
-            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            export DB_NAME=${{ secrets.DB_NAME }}
-            export RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }}
-            export JWT_SECRET=${{ secrets.JWT_SECRET }}
-            export S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
-            export AWS_REGION=${{ secrets.AWS_REGION }}
-            export PET_DB_NAME=${{ secrets.PET_DB_NAME }}
-            docker stop get-responsible-by-id || true
-            docker rm get-responsible-by-id || true
             docker run -d --name get-responsible-by-id \
               -p 2003:2003 \
-              -e DB_HOST=${{ secrets.DB_HOST }} \
-              -e DB_USER=${{ secrets.DB_USER }} \
-              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-              -e DB_NAME=${{ secrets.DB_NAME }} \
-              -e RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }} \
-              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-              -e S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }} \
-              -e AWS_REGION=${{ secrets.AWS_REGION }} \
-              -e PET_DB_NAME=${{ secrets.PET_DB_NAME }} \
+              -e DB_HOST=${DB_HOST} \
+              -e DB_USER=${DB_USER} \
+              -e DB_PASSWORD=${DB_PASSWORD} \
+              -e DB_NAME=${DB_NAME} \
+              -e RESPONSIBLE_DB_NAME=${RESPONSIBLE_DB_NAME} \
+              -e JWT_SECRET=${JWT_SECRET} \
+              -e S3_BUCKET_NAME=${S3_BUCKET_NAME} \
+              -e AWS_REGION=${AWS_REGION} \
+              -e PET_DB_NAME=${PET_DB_NAME} \
               joeli2104/get-responsible-by-id:latest
-
-  # Job para Get All Responsibles
-  deploy_get_all_responsibles:
-    runs-on: ubuntu-latest
-    if: ${{ contains(github.event.head_commit.message, 'get-all-responsibles') || github.event_name == 'push' && contains(join(github.event.commits.*.modified, ','), 'get-all-responsibles/') }}
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Log in to Docker Hub
-        run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
-
-      - name: Install dependencies and run tests for get-all-responsibles
-        run: |
-          cd get-all-responsibles
-          npm install
-          npm test
-
-      - name: Build Docker image for get-all-responsibles
-        run: |
-          docker build -t joeli2104/get-all-responsibles:latest ./get-all-responsibles
-
-      - name: Push Docker image for get-all-responsibles
-        run: |
-          docker push joeli2104/get-all-responsibles:latest
-
-      - name: Deploy get-all-responsibles to EC2 via SSH
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_RESPONSIBLE_TEST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script: |
-            export DB_HOST=${{ secrets.DB_HOST }}
-            export DB_USER=${{ secrets.DB_USER }}
-            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            export DB_NAME=${{ secrets.DB_NAME }}
-            export RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }}
-            export JWT_SECRET=${{ secrets.JWT_SECRET }}
-            export S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
-            export AWS_REGION=${{ secrets.AWS_REGION }}
-            export PET_DB_NAME=${{ secrets.PET_DB_NAME }}
-            docker stop get-all-responsibles || true
-            docker rm get-all-responsibles || true
             docker run -d --name get-all-responsibles \
               -p 2004:2004 \
-              -e DB_HOST=${{ secrets.DB_HOST }} \
-              -e DB_USER=${{ secrets.DB_USER }} \
-              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-              -e DB_NAME=${{ secrets.DB_NAME }} \
-              -e RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }} \
-              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-              -e S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }} \
-              -e AWS_REGION=${{ secrets.AWS_REGION }} \
-              -e PET_DB_NAME=${{ secrets.PET_DB_NAME }} \
+              -e DB_HOST=${DB_HOST} \
+              -e DB_USER=${DB_USER} \
+              -e DB_PASSWORD=${DB_PASSWORD} \
+              -e DB_NAME=${DB_NAME} \
+              -e RESPONSIBLE_DB_NAME=${RESPONSIBLE_DB_NAME} \
+              -e JWT_SECRET=${JWT_SECRET} \
+              -e S3_BUCKET_NAME=${S3_BUCKET_NAME} \
+              -e AWS_REGION=${AWS_REGION} \
+              -e PET_DB_NAME=${PET_DB_NAME} \
               joeli2104/get-all-responsibles:latest
-
-  # Job para Delete Responsible
-  deploy_delete_responsible:
-    runs-on: ubuntu-latest
-    if: ${{ contains(github.event.head_commit.message, 'delete-responsible') || github.event_name == 'push' && contains(join(github.event.commits.*.modified, ','), 'delete-responsible/') }}
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Log in to Docker Hub
-        run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
-
-      - name: Install dependencies and run tests for delete-responsible
-        run: |
-          cd delete-responsible
-          npm install
-          npm test
-
-      - name: Build Docker image for delete-responsible
-        run: |
-          docker build -t joeli2104/delete-responsible:latest ./delete-responsible
-
-      - name: Push Docker image for delete-responsible
-        run: |
-          docker push joeli2104/delete-responsible:latest
-
-      - name: Deploy delete-responsible to EC2 via SSH
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_RESPONSIBLE_TEST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script: |
-            export DB_HOST=${{ secrets.DB_HOST }}
-            export DB_USER=${{ secrets.DB_USER }}
-            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            export DB_NAME=${{ secrets.DB_NAME }}
-            export RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }}
-            export JWT_SECRET=${{ secrets.JWT_SECRET }}
-            export S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
-            export AWS_REGION=${{ secrets.AWS_REGION }}
-            export PET_DB_NAME=${{ secrets.PET_DB_NAME }}
-            docker stop delete-responsible || true
-            docker rm delete-responsible || true
             docker run -d --name delete-responsible \
               -p 2005:2005 \
-              -e DB_HOST=${{ secrets.DB_HOST }} \
-              -e DB_USER=${{ secrets.DB_USER }} \
-              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-              -e DB_NAME=${{ secrets.DB_NAME }} \
-              -e RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }} \
-              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-              -e S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }} \
-              -e AWS_REGION=${{ secrets.AWS_REGION }} \
-              -e PET_DB_NAME=${{ secrets.PET_DB_NAME }} \
+              -e DB_HOST=${DB_HOST} \
+              -e DB_USER=${DB_USER} \
+              -e DB_PASSWORD=${DB_PASSWORD} \
+              -e DB_NAME=${DB_NAME} \
+              -e RESPONSIBLE_DB_NAME=${RESPONSIBLE_DB_NAME} \
+              -e JWT_SECRET=${JWT_SECRET} \
+              -e S3_BUCKET_NAME=${S3_BUCKET_NAME} \
+              -e AWS_REGION=${AWS_REGION} \
+              -e PET_DB_NAME=${PET_DB_NAME} \
               joeli2104/delete-responsible:latest
-
-  # Job para Upload Avatar
-  deploy_upload_avatar:
-    runs-on: ubuntu-latest
-    if: ${{ contains(github.event.head_commit.message, 'upload-avatar') || github.event_name == 'push' && contains(join(github.event.commits.*.modified, ','), 'upload-avatar/') }}
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Log in to Docker Hub
-        run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
-
-      - name: Install dependencies and run tests for upload-avatar
-        run: |
-          cd upload-avatar
-          npm install
-          npm test
-
-      - name: Build Docker image for upload-avatar
-        run: |
-          docker build -t joeli2104/upload-avatar:latest ./upload-avatar
-
-      - name: Push Docker image for upload-avatar
-        run: |
-          docker push joeli2104/upload-avatar:latest
-
-      - name: Deploy upload-avatar to EC2 via SSH
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_RESPONSIBLE_TEST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script: |
-            export DB_HOST=${{ secrets.DB_HOST }}
-            export DB_USER=${{ secrets.DB_USER }}
-            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            export DB_NAME=${{ secrets.DB_NAME }}
-            export RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }}
-            export JWT_SECRET=${{ secrets.JWT_SECRET }}
-            export S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
-            export AWS_REGION=${{ secrets.AWS_REGION }}
-            export PET_DB_NAME=${{ secrets.PET_DB_NAME }}
-            docker stop upload-avatar || true
-            docker rm upload-avatar || true
             docker run -d --name upload-avatar \
               -p 2006:2006 \
-              -e DB_HOST=${{ secrets.DB_HOST }} \
-              -e DB_USER=${{ secrets.DB_USER }} \
-              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-              -e DB_NAME=${{ secrets.DB_NAME }} \
-              -e RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }} \
-              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-              -e S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }} \
-              -e AWS_REGION=${{ secrets.AWS_REGION }} \
-              -e PET_DB_NAME=${{ secrets.PET_DB_NAME }} \
+              -e DB_HOST=${DB_HOST} \
+              -e DB_USER=${DB_USER} \
+              -e DB_PASSWORD=${DB_PASSWORD} \
+              -e DB_NAME=${DB_NAME} \
+              -e RESPONSIBLE_DB_NAME=${RESPONSIBLE_DB_NAME} \
+              -e JWT_SECRET=${JWT_SECRET} \
+              -e S3_BUCKET_NAME=${S3_BUCKET_NAME} \
+              -e AWS_REGION=${AWS_REGION} \
+              -e PET_DB_NAME=${PET_DB_NAME} \
               joeli2104/upload-avatar:latest
-
-  # Job para Update Avatar
-  deploy_update_avatar:
-    runs-on: ubuntu-latest
-    if: ${{ contains(github.event.head_commit.message, 'update-avatar') || github.event_name == 'push' && contains(join(github.event.commits.*.modified, ','), 'update-avatar/') }}
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Log in to Docker Hub
-        run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
-
-      - name: Install dependencies and run tests for update-avatar
-        run: |
-          cd update-avatar
-          npm install
-          npm test
-
-      - name: Build Docker image for update-avatar
-        run: |
-          docker build -t joeli2104/update-avatar:latest ./update-avatar
-
-      - name: Push Docker image for update-avatar
-        run: |
-          docker push joeli2104/update-avatar:latest
-
-      - name: Deploy update-avatar to EC2 via SSH
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_RESPONSIBLE_TEST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script: |
-            export DB_HOST=${{ secrets.DB_HOST }}
-            export DB_USER=${{ secrets.DB_USER }}
-            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            export DB_NAME=${{ secrets.DB_NAME }}
-            export RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }}
-            export JWT_SECRET=${{ secrets.JWT_SECRET }}
-            export S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
-            export AWS_REGION=${{ secrets.AWS_REGION }}
-            export PET_DB_NAME=${{ secrets.PET_DB_NAME }}
-            docker stop update-avatar || true
-            docker rm update-avatar || true
             docker run -d --name update-avatar \
               -p 2007:2007 \
-              -e DB_HOST=${{ secrets.DB_HOST }} \
-              -e DB_USER=${{ secrets.DB_USER }} \
-              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-              -e DB_NAME=${{ secrets.DB_NAME }} \
-              -e RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }} \
-              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-              -e S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }} \
-              -e AWS_REGION=${{ secrets.AWS_REGION }} \
-              -e PET_DB_NAME=${{ secrets.PET_DB_NAME }} \
+              -e DB_HOST=${DB_HOST} \
+              -e DB_USER=${DB_USER} \
+              -e DB_PASSWORD=${DB_PASSWORD} \
+              -e DB_NAME=${DB_NAME} \
+              -e RESPONSIBLE_DB_NAME=${RESPONSIBLE_DB_NAME} \
+              -e JWT_SECRET=${JWT_SECRET} \
+              -e S3_BUCKET_NAME=${S3_BUCKET_NAME} \
+              -e AWS_REGION=${AWS_REGION} \
+              -e PET_DB_NAME=${PET_DB_NAME} \
               joeli2104/update-avatar:latest
-
-  # Job para Get All Avatars
-  deploy_get_all_avatars:
-    runs-on: ubuntu-latest
-    if: ${{ contains(github.event.head_commit.message, 'get-all-avatars') || github.event_name == 'push' && contains(join(github.event.commits.*.modified, ','), 'get-all-avatars/') }}
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Log in to Docker Hub
-        run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
-
-      - name: Install dependencies and run tests for get-all-avatars
-        run: |
-          cd get-all-avatars
-          npm install
-          npm test
-
-      - name: Build Docker image for get-all-avatars
-        run: |
-          docker build -t joeli2104/get-all-avatars:latest ./get-all-avatars
-
-      - name: Push Docker image for get-all-avatars
-        run: |
-          docker push joeli2104/get-all-avatars:latest
-
-      - name: Deploy get-all-avatars to EC2 via SSH
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_RESPONSIBLE_TEST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script: |
-            export DB_HOST=${{ secrets.DB_HOST }}
-            export DB_USER=${{ secrets.DB_USER }}
-            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            export DB_NAME=${{ secrets.DB_NAME }}
-            export RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }}
-            export JWT_SECRET=${{ secrets.JWT_SECRET }}
-            export S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
-            export AWS_REGION=${{ secrets.AWS_REGION }}
-            export PET_DB_NAME=${{ secrets.PET_DB_NAME }}
-            docker stop get-all-avatars || true
-            docker rm get-all-avatars || true
             docker run -d --name get-all-avatars \
-              -p 2008:2008 \
-              -e DB_HOST=${{ secrets.DB_HOST }} \
-              -e DB_USER=${{ secrets.DB_USER }} \
-              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-              -e DB_NAME=${{ secrets.DB_NAME }} \
-              -e RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }} \
-              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-              -e S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }} \
-              -e AWS_REGION=${{ secrets.AWS_REGION }} \
-              -e PET_DB_NAME=${{ secrets.PET_DB_NAME }} \
-              joeli2104/get-all-avatars:latest
-
-  # Job para Delete Avatar
-  deploy_delete_avatar:
-    runs-on: ubuntu-latest
-    if: ${{ contains(github.event.head_commit.message, 'delete-avatar') || github.event_name == 'push' && contains(join(github.event.commits.*.modified, ','), 'delete-avatar/') }}
-    steps:
-      - name: Check out code
-        uses: actions/checkout@v2
-
-      - name: Log in to Docker Hub
-        run: |
-          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
-
-      - name: Install Docker
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y docker.io
-
-      - name: Install dependencies and run tests for delete-avatar
-        run: |
-          cd delete-avatar
-          npm install
-          npm test
-
-      - name: Build Docker image for delete-avatar
-        run: |
-          docker build -t joeli2104/delete-avatar:latest ./delete-avatar
-
-      - name: Push Docker image for delete-avatar
-        run: |
-          docker push joeli2104/delete-avatar:latest
-
-      - name: Deploy delete-avatar to EC2 via SSH
-        uses: appleboy/ssh-action@v0.1.7
-        with:
-          host: ${{ secrets.EC2_RESPONSIBLE_TEST }}
-          username: ubuntu
-          key: ${{ secrets.EC2_SSH_KEY }}
-          port: 22
-          script: |
-            export DB_HOST=${{ secrets.DB_HOST }}
-            export DB_USER=${{ secrets.DB_USER }}
-            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
-            export DB_NAME=${{ secrets.DB_NAME }}
-            export RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }}
-            export JWT_SECRET=${{ secrets.JWT_SECRET }}
-            export S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
-            export AWS_REGION=${{ secrets.AWS_REGION }}
-            export PET_DB_NAME=${{ secrets.PET_DB_NAME }}
-            docker stop delete-avatar || true
-            docker rm delete-avatar || true
-            docker run -d --name delete-avatar \
               -p 2009:2009 \
-              -e DB_HOST=${{ secrets.DB_HOST }} \
-              -e DB_USER=${{ secrets.DB_USER }} \
-              -e DB_PASSWORD=${{ secrets.DB_PASSWORD }} \
-              -e DB_NAME=${{ secrets.DB_NAME }} \
-              -e RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }} \
-              -e JWT_SECRET=${{ secrets.JWT_SECRET }} \
-              -e S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }} \
-              -e AWS_REGION=${{ secrets.AWS_REGION }} \
-              -e PET_DB_NAME=${{ secrets.PET_DB_NAME }} \
+              -e DB_HOST=${DB_HOST} \
+              -e DB_USER=${DB_USER} \
+              -e DB_PASSWORD=${DB_PASSWORD} \
+              -e DB_NAME=${DB_NAME} \
+              -e RESPONSIBLE_DB_NAME=${RESPONSIBLE_DB_NAME} \
+              -e JWT_SECRET=${JWT_SECRET} \
+              -e S3_BUCKET_NAME=${S3_BUCKET_NAME} \
+              -e AWS_REGION=${AWS_REGION} \
+              -e PET_DB_NAME=${PET_DB_NAME} \
+              joeli2104/get-all-avatars:latest
+            docker run -d --name delete-avatar \
+              -p 2008:2008 \
+              -e DB_HOST=${DB_HOST} \
+              -e DB_USER=${DB_USER} \
+              -e DB_PASSWORD=${DB_PASSWORD} \
+              -e DB_NAME=${DB_NAME} \
+              -e RESPONSIBLE_DB_NAME=${RESPONSIBLE_DB_NAME} \
+              -e JWT_SECRET=${JWT_SECRET} \
+              -e S3_BUCKET_NAME=${S3_BUCKET_NAME} \
+              -e AWS_REGION=${AWS_REGION} \
+              -e PET_DB_NAME=${PET_DB_NAME} \
               joeli2104/delete-avatar:latest
