@@ -23,6 +23,16 @@ jobs:
           sudo chmod +x /usr/local/bin/docker-compose
           docker-compose --version
 
+      - name: Export environment variables for test
+        run: |
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> $GITHUB_ENV
+          echo "DB_USER=${{ secrets.DB_USER }}" >> $GITHUB_ENV
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
+          echo "DB_PORT=${{ secrets.DB_PORT }}" >> $GITHUB_ENV
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> $GITHUB_ENV
+          echo "RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }}" >> $GITHUB_ENV
+          echo "PET_DB_NAME=${{ secrets.PET_DB_NAME }}" >> $GITHUB_ENV
+
       - name: Install dependencies and run tests for all microservices
         run: |
           for dir in register update-responsible get-responsible-by-id get-all-responsibles delete-responsible upload-avatar update-avatar get-all-avatars delete-avatar; do
