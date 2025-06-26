@@ -1,5 +1,5 @@
 {
-  "name": "microservice-register",
+  "name": "microservice-delete-responsible",
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {

@@ -1,5 +1,5 @@
 {
-  "name": "microservice-register",
+  "name": "update-avatar",
   "version": "1.0.0",
   "main": "app.js",
   "scripts": {
