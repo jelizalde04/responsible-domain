@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - test
+      - main
 
 jobs:
   build_and_deploy:
@@ -24,6 +25,7 @@ jobs:
           docker-compose --version
 
       - name: Export environment variables for test
+        if: github.ref == 'refs/heads/test'
         run: |
           echo "DB_HOST=${{ secrets.DB_HOST }}" >> $GITHUB_ENV
           echo "DB_USER=${{ secrets.DB_USER }}" >> $GITHUB_ENV
@@ -32,6 +34,23 @@ jobs:
           echo "DB_NAME=${{ secrets.DB_NAME }}" >> $GITHUB_ENV
           echo "RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }}" >> $GITHUB_ENV
           echo "PET_DB_NAME=${{ secrets.PET_DB_NAME }}" >> $GITHUB_ENV
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> $GITHUB_ENV
+          echo "S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}" >> $GITHUB_ENV
+          echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> $GITHUB_ENV
+
+      - name: Export environment variables for prod
+        if: github.ref == 'refs/heads/main'
+        run: |
+          echo "DB_HOST=${{ secrets.DB_HOST_PROD }}" >> $GITHUB_ENV
+          echo "DB_USER=${{ secrets.DB_USER_PROD }}" >> $GITHUB_ENV
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD_PROD }}" >> $GITHUB_ENV
+          echo "DB_PORT=${{ secrets.DB_PORT_PROD }}" >> $GITHUB_ENV
+          echo "DB_NAME=${{ secrets.DB_NAME_PROD }}" >> $GITHUB_ENV
+          echo "RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME_PROD }}" >> $GITHUB_ENV
+          echo "PET_DB_NAME=${{ secrets.PET_DB_NAME_PROD }}" >> $GITHUB_ENV
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET_PROD }}" >> $GITHUB_ENV
+          echo "S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME_PROD }}" >> $GITHUB_ENV
+          echo "AWS_REGION=${{ secrets.AWS_REGION_PROD }}" >> $GITHUB_ENV
 
       - name: Install dependencies and run tests for all microservices
         run: |
@@ -50,7 +69,12 @@ jobs:
         run: |
           docker-compose -f docker-compose-pet-domain.yml push
 
-      - name: Clean up existing containers on EC2
+  deploy_responsible_qa:
+    needs: build_and_deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/test'
+    steps:
+      - name: Clean up existing containers on EC2 QA
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.EC2_RESPONSIBLE_TEST }}
@@ -63,7 +87,7 @@ jobs:
             docker rm $(docker ps -aq) || true
             docker system prune -af || true
 
-      - name: Deploy new containers to EC2 via SSH
+      - name: Deploy new containers to EC2 QA via SSH
         uses: appleboy/ssh-action@v0.1.7
         with:
           host: ${{ secrets.EC2_RESPONSIBLE_TEST }}
@@ -81,6 +105,7 @@ jobs:
             export S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
             export AWS_REGION=${{ secrets.AWS_REGION }}
             export PET_DB_NAME=${{ secrets.PET_DB_NAME }}
+
             docker run -d --name register \
               -p 2001:2001 \
               -e DB_HOST=${DB_HOST} \
@@ -93,6 +118,7 @@ jobs:
               -e AWS_REGION=${AWS_REGION} \
               -e PET_DB_NAME=${PET_DB_NAME} \
               joeli2104/register:latest
+
             docker run -d --name update-responsible \
               -p 2002:2002 \
               -e DB_HOST=${DB_HOST} \
@@ -105,6 +131,7 @@ jobs:
               -e AWS_REGION=${AWS_REGION} \
               -e PET_DB_NAME=${PET_DB_NAME} \
               joeli2104/update-responsible:latest
+
             docker run -d --name get-responsible-by-id \
               -p 2003:2003 \
               -e DB_HOST=${DB_HOST} \
@@ -117,6 +144,7 @@ jobs:
               -e AWS_REGION=${AWS_REGION} \
               -e PET_DB_NAME=${PET_DB_NAME} \
               joeli2104/get-responsible-by-id:latest
+
             docker run -d --name get-all-responsibles \
               -p 2004:2004 \
               -e DB_HOST=${DB_HOST} \
@@ -129,6 +157,7 @@ jobs:
               -e AWS_REGION=${AWS_REGION} \
               -e PET_DB_NAME=${PET_DB_NAME} \
               joeli2104/get-all-responsibles:latest
+
             docker run -d --name delete-responsible \
               -p 2005:2005 \
               -e DB_HOST=${DB_HOST} \
@@ -141,6 +170,7 @@ jobs:
               -e AWS_REGION=${AWS_REGION} \
               -e PET_DB_NAME=${PET_DB_NAME} \
               joeli2104/delete-responsible:latest
+
             docker run -d --name upload-avatar \
               -p 2006:2006 \
               -e DB_HOST=${DB_HOST} \
@@ -153,6 +183,7 @@ jobs:
               -e AWS_REGION=${AWS_REGION} \
               -e PET_DB_NAME=${PET_DB_NAME} \
               joeli2104/upload-avatar:latest
+
             docker run -d --name update-avatar \
               -p 2007:2007 \
               -e DB_HOST=${DB_HOST} \
@@ -165,6 +196,7 @@ jobs:
               -e AWS_REGION=${AWS_REGION} \
               -e PET_DB_NAME=${PET_DB_NAME} \
               joeli2104/update-avatar:latest
+
             docker run -d --name get-all-avatars \
               -p 2009:2009 \
               -e DB_HOST=${DB_HOST} \
@@ -177,6 +209,162 @@ jobs:
               -e AWS_REGION=${AWS_REGION} \
               -e PET_DB_NAME=${PET_DB_NAME} \
               joeli2104/get-all-avatars:latest
+
+            docker run -d --name delete-avatar \
+              -p 2008:2008 \
+              -e DB_HOST=${DB_HOST} \
+              -e DB_USER=${DB_USER} \
+              -e DB_PASSWORD=${DB_PASSWORD} \
+              -e DB_NAME=${DB_NAME} \
+              -e RESPONSIBLE_DB_NAME=${RESPONSIBLE_DB_NAME} \
+              -e JWT_SECRET=${JWT_SECRET} \
+              -e S3_BUCKET_NAME=${S3_BUCKET_NAME} \
+              -e AWS_REGION=${AWS_REGION} \
+              -e PET_DB_NAME=${PET_DB_NAME} \
+              joeli2104/delete-avatar:latest
+
+  deploy_responsible_prod:
+    needs: build_and_deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - name: Clean up existing containers on EC2 PROD
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_RESPONSIBLE_PROD }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY_PROD }}
+          port: 22
+          debug: true
+          script: |
+            docker stop $(docker ps -aq) || true
+            docker rm $(docker ps -aq) || true
+            docker system prune -af || true
+
+      - name: Deploy new containers to EC2 PROD via SSH
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.EC2_RESPONSIBLE_PROD }}
+          username: ubuntu
+          key: ${{ secrets.EC2_SSH_KEY_PROD }}
+          port: 22
+          debug: true
+          script: |
+            export DB_HOST=${{ secrets.DB_HOST_PROD }}
+            export DB_USER=${{ secrets.DB_USER_PROD }}
+            export DB_PASSWORD=${{ secrets.DB_PASSWORD_PROD }}
+            export DB_PORT=${{ secrets.DB_PORT_PROD }}
+            export DB_NAME=${{ secrets.DB_NAME_PROD }}
+            export RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME_PROD }}
+            export JWT_SECRET=${{ secrets.JWT_SECRET_PROD }}
+            export S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME_PROD }}
+            export AWS_REGION=${{ secrets.AWS_REGION_PROD }}
+            export PET_DB_NAME=${{ secrets.PET_DB_NAME_PROD }}
+
+            docker run -d --name register \
+              -p 2001:2001 \
+              -e DB_HOST=${DB_HOST} \
+              -e DB_USER=${DB_USER} \
+              -e DB_PASSWORD=${DB_PASSWORD} \
+              -e DB_NAME=${DB_NAME} \
+              -e RESPONSIBLE_DB_NAME=${RESPONSIBLE_DB_NAME} \
+              -e JWT_SECRET=${JWT_SECRET} \
+              -e S3_BUCKET_NAME=${S3_BUCKET_NAME} \
+              -e AWS_REGION=${AWS_REGION} \
+              -e PET_DB_NAME=${PET_DB_NAME} \
+              joeli2104/register:latest
+
+            docker run -d --name update-responsible \
+              -p 2002:2002 \
+              -e DB_HOST=${DB_HOST} \
+              -e DB_USER=${DB_USER} \
+              -e DB_PASSWORD=${DB_PASSWORD} \
+              -e DB_NAME=${DB_NAME} \
+              -e RESPONSIBLE_DB_NAME=${RESPONSIBLE_DB_NAME} \
+              -e JWT_SECRET=${JWT_SECRET} \
+              -e S3_BUCKET_NAME=${S3_BUCKET_NAME} \
+              -e AWS_REGION=${AWS_REGION} \
+              -e PET_DB_NAME=${PET_DB_NAME} \
+              joeli2104/update-responsible:latest
+
+            docker run -d --name get-responsible-by-id \
+              -p 2003:2003 \
+              -e DB_HOST=${DB_HOST} \
+              -e DB_USER=${DB_USER} \
+              -e DB_PASSWORD=${DB_PASSWORD} \
+              -e DB_NAME=${DB_NAME} \
+              -e RESPONSIBLE_DB_NAME=${RESPONSIBLE_DB_NAME} \
+              -e JWT_SECRET=${JWT_SECRET} \
+              -e S3_BUCKET_NAME=${S3_BUCKET_NAME} \
+              -e AWS_REGION=${AWS_REGION} \
+              -e PET_DB_NAME=${PET_DB_NAME} \
+              joeli2104/get-responsible-by-id:latest
+
+            docker run -d --name get-all-responsibles \
+              -p 2004:2004 \
+              -e DB_HOST=${DB_HOST} \
+              -e DB_USER=${DB_USER} \
+              -e DB_PASSWORD=${DB_PASSWORD} \
+              -e DB_NAME=${DB_NAME} \
+              -e RESPONSIBLE_DB_NAME=${RESPONSIBLE_DB_NAME} \
+              -e JWT_SECRET=${JWT_SECRET} \
+              -e S3_BUCKET_NAME=${S3_BUCKET_NAME} \
+              -e AWS_REGION=${AWS_REGION} \
+              -e PET_DB_NAME=${PET_DB_NAME} \
+              joeli2104/get-all-responsibles:latest
+
+            docker run -d --name delete-responsible \
+              -p 2005:2005 \
+              -e DB_HOST=${DB_HOST} \
+              -e DB_USER=${DB_USER} \
+              -e DB_PASSWORD=${DB_PASSWORD} \
+              -e DB_NAME=${DB_NAME} \
+              -e RESPONSIBLE_DB_NAME=${RESPONSIBLE_DB_NAME} \
+              -e JWT_SECRET=${JWT_SECRET} \
+              -e S3_BUCKET_NAME=${S3_BUCKET_NAME} \
+              -e AWS_REGION=${AWS_REGION} \
+              -e PET_DB_NAME=${PET_DB_NAME} \
+              joeli2104/delete-responsible:latest
+
+            docker run -d --name upload-avatar \
+              -p 2006:2006 \
+              -e DB_HOST=${DB_HOST} \
+              -e DB_USER=${DB_USER} \
+              -e DB_PASSWORD=${DB_PASSWORD} \
+              -e DB_NAME=${DB_NAME} \
+              -e RESPONSIBLE_DB_NAME=${RESPONSIBLE_DB_NAME} \
+              -e JWT_SECRET=${JWT_SECRET} \
+              -e S3_BUCKET_NAME=${S3_BUCKET_NAME} \
+              -e AWS_REGION=${AWS_REGION} \
+              -e PET_DB_NAME=${PET_DB_NAME} \
+              joeli2104/upload-avatar:latest
+
+            docker run -d --name update-avatar \
+              -p 2007:2007 \
+              -e DB_HOST=${DB_HOST} \
+              -e DB_USER=${DB_USER} \
+              -e DB_PASSWORD=${DB_PASSWORD} \
+              -e DB_NAME=${DB_NAME} \
+              -e RESPONSIBLE_DB_NAME=${RESPONSIBLE_DB_NAME} \
+              -e JWT_SECRET=${JWT_SECRET} \
+              -e S3_BUCKET_NAME=${S3_BUCKET_NAME} \
+              -e AWS_REGION=${AWS_REGION} \
+              -e PET_DB_NAME=${PET_DB_NAME} \
+              joeli2104/update-avatar:latest
+
+            docker run -d --name get-all-avatars \
+              -p 2009:2009 \
+              -e DB_HOST=${DB_HOST} \
+              -e DB_USER=${DB_USER} \
+              -e DB_PASSWORD=${DB_PASSWORD} \
+              -e DB_NAME=${DB_NAME} \
+              -e RESPONSIBLE_DB_NAME=${RESPONSIBLE_DB_NAME} \
+              -e JWT_SECRET=${JWT_SECRET} \
+              -e S3_BUCKET_NAME=${S3_BUCKET_NAME} \
+              -e AWS_REGION=${AWS_REGION} \
+              -e PET_DB_NAME=${PET_DB_NAME} \
+              joeli2104/get-all-avatars:latest
+
             docker run -d --name delete-avatar \
               -p 2008:2008 \
               -e DB_HOST=${DB_HOST} \
