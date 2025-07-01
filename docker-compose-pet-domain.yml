@@ -69,7 +69,7 @@ services:
       context: ./get-all-avatars
     image: joeli2104/get-all-avatars:latest
     ports:
-      - "2008:2008"
+      - "2009:2009"
     networks:
       - responsible_network
 
@@ -78,7 +78,7 @@ services:
       context: ./delete-avatar
     image: joeli2104/delete-avatar:latest
     ports:
-      - "2009:2009"
+      8- "2008:2008"
     networks:
       - responsible_network
 networks:

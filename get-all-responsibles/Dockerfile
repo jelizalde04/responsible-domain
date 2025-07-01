@@ -11,7 +11,6 @@ COPY swagger.js .
 COPY config ./config
 COPY controllers ./controllers
 COPY services ./services
-COPY middlewares ./middlewares
 COPY models ./models
 COPY routes ./routes
 
