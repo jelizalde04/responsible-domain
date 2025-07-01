@@ -10,17 +10,16 @@ dotenv.config();
 
 const app = express();
 
-// Configuración de CORS y JSON
+
 app.use(cors());
 app.use(express.json());
 
-// Documentación Swagger
 app.use('/api-docs-uploadAvatar', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
-// Rutas del microservicio de Avatar
+
 app.use('/avatars', avatarRoutes);
 
-// Función para iniciar el servidor
+
 const startServer = async () => {
   try {
     await sequelize.authenticate();
@@ -39,5 +38,5 @@ const startServer = async () => {
   }
 };
 
-// Llamar a la función para iniciar el servidor
+
 startServer();
