@@ -78,7 +78,7 @@ services:
       context: ./delete-avatar
     image: joeli2104/delete-avatar:latest
     ports:
-      8- "2008:2008"
+      - "2008:2008"
     networks:
       - responsible_network
 networks:
