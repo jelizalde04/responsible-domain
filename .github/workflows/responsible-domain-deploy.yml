@@ -377,3 +377,5 @@ jobs:
               -e AWS_REGION=${AWS_REGION} \
               -e PET_DB_NAME=${PET_DB_NAME} \
               joeli2104/delete-avatar:latest
+
+              
