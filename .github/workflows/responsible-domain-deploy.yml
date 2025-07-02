@@ -63,11 +63,11 @@ jobs:
 
       - name: Build Docker images using Docker Compose
         run: |
-          docker-compose -f docker-compose-pet-domain.yml build
+          docker-compose -f docker-compose-responsible-domain.yml build
 
       - name: Push Docker images to Docker Hub
         run: |
-          docker-compose -f docker-compose-pet-domain.yml push
+          docker-compose -f docker-compose-responsible-domain.yml push
 
   deploy_responsible_qa:
     needs: build_and_deploy
