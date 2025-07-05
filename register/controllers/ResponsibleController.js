@@ -11,8 +11,7 @@ const registerResponsible = async (req, res, next) => {
       avatar, 
     });
     return res.status(201).json({
-      message: "Usuario creado exitosamente.",
-      responsible,
+      message: "Successfully registered"
     });
   } catch (error) {
     console.error(error);

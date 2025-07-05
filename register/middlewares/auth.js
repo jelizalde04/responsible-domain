@@ -6,36 +6,36 @@ const validateResponsible = [
   // Validate that the name is not empty and has a minimum length
   body("name")
     .notEmpty()
-    .withMessage("El nombre es obligatorio")
+    .withMessage("Name is required")
     .isLength({ min: 3 })
-    .withMessage("El nombre debe tener al menos 3 caracteres"),
+    .withMessage("Name must be at least 3 characters long"),
 
   // Validate the email format
   body("email")
     .notEmpty()
-    .withMessage("El email es obligatorio")
+    .withMessage("Email is required")
     .isEmail()
-    .withMessage("El formato del email no es válido")
+    .withMessage("Invalid email format")
     .normalizeEmail(), // Normalize the email (convert to lowercase, etc.)
 
   // Validate the password (minimum 6 characters, for example)
   body("password")
     .notEmpty()
-    .withMessage("La contraseña es obligatoria")
+    .withMessage("Password is required")
     .isLength({ min: 6 })
-    .withMessage("La contraseña debe tener al menos 6 caracteres"),
+    .withMessage("Password must be at least 6 characters long"),
 
   // Validate the contact field (optional, if provided, must be a string)
   body("contact")
     .optional()
     .isString()
-    .withMessage("El contacto debe ser una cadena de texto"),
+    .withMessage("Contact must be a string"),
 
   // Check for errors and respond if any
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-      const error = new Error("Datos de entrada inválidos");
+      const error = new Error("Invalid input data");
       error.status = 400;
       error.details = errors.array(); // Add validation error details
       return next(error); // Pass the error to the error handling middleware
