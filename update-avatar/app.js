@@ -10,16 +10,14 @@ dotenv.config();
 
 const app = express();
 
-
 app.use(cors());
 app.use(express.json());
 
-
 app.use('/api-docs-updateAvatar', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-
-
 app.use('/avatars', avatarRoutes);
-
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', message: 'Service is healthy' });
+});
 
 const startServer = async () => {
   try {
