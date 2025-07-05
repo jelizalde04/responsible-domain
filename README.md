@@ -102,7 +102,7 @@ Below is a summary of the main endpoints for each microservice:
 
 ### register
 
-- **POST /responsibles**
+- **POST /register**
   - Registers a new user.
   - **Request:** `{ "name": "...", "email": "...", ... }`
   - **Response:** `{ "message": "Registered successfully", "user": { ... } }`

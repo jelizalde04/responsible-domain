@@ -6,7 +6,7 @@ const authenticateToken = require('../middlewares/auth');
 
 /**
  @swagger
- * /responsibles:
+ * /responsibles/update:
  *   put:
  *     summary: Actualiza un responsable autenticado
  *     description: Permite al responsable autenticado actualizar su propia información.
@@ -44,6 +44,6 @@ const authenticateToken = require('../middlewares/auth');
  *       500:
  *         description: Error interno del servidor.
  */
-router.put("/", authenticateToken, validateResponsible, ResponsibleController.updateResponsible);
+router.put("/update", authenticateToken, validateResponsible, ResponsibleController.updateResponsible);
 
 module.exports = router;

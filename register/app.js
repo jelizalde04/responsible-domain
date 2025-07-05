@@ -12,8 +12,8 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-app.use('/responsibles', responsibleRoutes);
-app.use('/api-docs-createRes', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+app.use('/register', responsibleRoutes);
+app.use('/api-docs-register', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'OK', message: 'Service is healthy' });

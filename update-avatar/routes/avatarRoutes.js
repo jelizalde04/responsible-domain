@@ -10,7 +10,7 @@ const upload = multer({ storage: storage }).single('avatar');
 
 /** 
  * @swagger 
- * /avatars/edit:
+ * /avatars/update:
  *   put:
  *     summary: Editar una imagen de avatar para el usuario
  *     description: Permite a un usuario actualizar su imagen de perfil reemplazando la anterior
@@ -37,6 +37,6 @@ const upload = multer({ storage: storage }).single('avatar');
  */
 
 
-router.put('/edit', authenticateToken, upload, editAvatar);
+router.put('/update', authenticateToken, upload, editAvatar);
 
 module.exports = router;
