@@ -16,9 +16,10 @@ app.use(express.json());
 
 
 app.use('/api-docs-deleteAvatar', swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-
-
 app.use('/avatars', avatarRoutes);
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', message: 'Service is healthy' });
+});
 
 
 const startServer = async () => {

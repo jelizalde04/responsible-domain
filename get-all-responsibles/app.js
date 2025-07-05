@@ -14,7 +14,9 @@ app.use(express.json());
 
 app.use('/responsibles', responsibleRoutes);
 app.use('/api-docs-getAllRes', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
-
+app.get('/health', (req, res) => {
+  res.status(200).json({ status: 'OK', message: 'Service is healthy' });
+});
 
 const PORT = process.env.PORT || 2004;
 
