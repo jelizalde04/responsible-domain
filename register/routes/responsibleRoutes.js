@@ -5,7 +5,7 @@ const { validateResponsible } = require("../middlewares/auth");
 
 /**
  * @swagger
- * /responsibles/register:
+ * /register:
  *   post:
  *     summary: Registra un nuevo responsable
  *     description: Crea una nueva cuenta para un responsable en el sistema.
@@ -44,6 +44,6 @@ const { validateResponsible } = require("../middlewares/auth");
  *       500:
  *         description: Error interno del servidor.
  */
-router.post("/register", validateResponsible, ResponsibleController.registerResponsible);
+router.post("/", validateResponsible, ResponsibleController.registerResponsible);
 
 module.exports = router;

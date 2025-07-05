@@ -14,7 +14,7 @@ The **Register Microservice** is responsible for registering new "responsible" u
 
 ### Endpoints
 
-#### **POST /responsibles/register**
+#### **POST /register**
 
 Registers a new responsible user.
 
@@ -66,7 +66,7 @@ Registers a new responsible user.
 
 #### **Swagger Documentation**
 
-- **GET /api-docs-createRes**  
+- **GET /api-docs-register**  
   Interactive API documentation and testing interface.
 
 ## 3. How the Microservice Works
@@ -140,7 +140,7 @@ npm start
 ## 7. Swagger Documentation
 
 - Access interactive API docs at:  
-  [http://localhost:2001/api-docs-createRes](http://localhost:2001/api-docs-createRes)
+  [http://localhost:2001/api-docs-register](http://localhost:2001/api-docs-register)
 
 ## 8. Testing
 

@@ -5,7 +5,7 @@ const authenticateToken = require("../middlewares/auth");  // Middleware que dec
 
 /**
  * @swagger
- * /responsibles:
+ * /responsibles/getId:
  *   get:
  *     summary: Obtener el responsable autenticado
  *     description: Retorna la información del responsable autenticado mediante el token.
@@ -44,6 +44,6 @@ const authenticateToken = require("../middlewares/auth");  // Middleware que dec
  *       500:
  *         description: Error interno del servidor.
  */
-router.get("/", authenticateToken, ResponsibleController.getResponsibleById);
+router.get("/getId", authenticateToken, ResponsibleController.getResponsibleById);
 
 module.exports = router;

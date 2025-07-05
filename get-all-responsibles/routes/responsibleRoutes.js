@@ -3,7 +3,7 @@ const router = express.Router();
 const ResponsibleController = require('../controllers/ResponsibleController');
 /**
  * @swagger
- * /responsibles:
+ * /responsibles/getAll:
  *   get:
  *     summary: Obtener todos los responsables
  *     description: Permite obtener una lista de todos los responsables.
@@ -43,6 +43,6 @@ const ResponsibleController = require('../controllers/ResponsibleController');
  *       500:
  *         description: Error interno del servidor.
  */
-router.get("/", ResponsibleController.getAllResponsibles);  
+router.get("/getAll", ResponsibleController.getAllResponsibles);  
 
 module.exports = router;
