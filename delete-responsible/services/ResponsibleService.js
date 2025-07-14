@@ -23,8 +23,6 @@ const deleteResponsible = async (id) => {
     if (!responsible) {
       throw new Error("Responsable no encontrado");
     }
-
-    te
     if (responsible.avatar) {
       const avatarUrl = responsible.avatar;
       
