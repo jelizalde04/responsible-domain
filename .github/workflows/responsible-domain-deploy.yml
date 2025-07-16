@@ -41,16 +41,16 @@ jobs:
       - name: Export environment variables for prod
         if: github.ref == 'refs/heads/main'
         run: |
-          echo "DB_HOST=${{ secrets.DB_HOST_PROD }}" >> $GITHUB_ENV
-          echo "DB_USER=${{ secrets.DB_USER_PROD }}" >> $GITHUB_ENV
-          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD_PROD }}" >> $GITHUB_ENV
-          echo "DB_PORT=${{ secrets.DB_PORT_PROD }}" >> $GITHUB_ENV
-          echo "DB_NAME=${{ secrets.DB_NAME_PROD }}" >> $GITHUB_ENV
-          echo "RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME_PROD }}" >> $GITHUB_ENV
-          echo "PET_DB_NAME=${{ secrets.PET_DB_NAME_PROD }}" >> $GITHUB_ENV
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET_PROD }}" >> $GITHUB_ENV
-          echo "S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME_PROD }}" >> $GITHUB_ENV
-          echo "AWS_REGION=${{ secrets.AWS_REGION_PROD }}" >> $GITHUB_ENV
+          echo "DB_HOST=${{ secrets.DB_HOST }}" >> $GITHUB_ENV
+          echo "DB_USER=${{ secrets.DB_USER }}" >> $GITHUB_ENV
+          echo "DB_PASSWORD=${{ secrets.DB_PASSWORD }}" >> $GITHUB_ENV
+          echo "DB_PORT=${{ secrets.DB_PORT }}" >> $GITHUB_ENV
+          echo "DB_NAME=${{ secrets.DB_NAME }}" >> $GITHUB_ENV
+          echo "RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }}" >> $GITHUB_ENV
+          echo "PET_DB_NAME=${{ secrets.PET_DB_NAME }}" >> $GITHUB_ENV
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> $GITHUB_ENV
+          echo "S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}" >> $GITHUB_ENV
+          echo "AWS_REGION=${{ secrets.AWS_REGION }}" >> $GITHUB_ENV
 
       - name: Install dependencies and run tests for all microservices
         run: |
@@ -250,16 +250,16 @@ jobs:
           port: 22
           debug: true
           script: |
-            export DB_HOST=${{ secrets.DB_HOST_PROD }}
-            export DB_USER=${{ secrets.DB_USER_PROD }}
-            export DB_PASSWORD=${{ secrets.DB_PASSWORD_PROD }}
-            export DB_PORT=${{ secrets.DB_PORT_PROD }}
-            export DB_NAME=${{ secrets.DB_NAME_PROD }}
-            export RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME_PROD }}
-            export JWT_SECRET=${{ secrets.JWT_SECRET_PROD }}
-            export S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME_PROD }}
-            export AWS_REGION=${{ secrets.AWS_REGION_PROD }}
-            export PET_DB_NAME=${{ secrets.PET_DB_NAME_PROD }}
+            export DB_HOST=${{ secrets.DB_HOST }}
+            export DB_USER=${{ secrets.DB_USER }}
+            export DB_PASSWORD=${{ secrets.DB_PASSWORD }}
+            export DB_PORT=${{ secrets.DB_PORT }}
+            export DB_NAME=${{ secrets.DB_NAME }}
+            export RESPONSIBLE_DB_NAME=${{ secrets.RESPONSIBLE_DB_NAME }}
+            export JWT_SECRET=${{ secrets.JWT_SECRET }}
+            export S3_BUCKET_NAME=${{ secrets.S3_BUCKET_NAME }}
+            export AWS_REGION=${{ secrets.AWS_REGION }}
+            export PET_DB_NAME=${{ secrets.PET_DB_NAME }}
 
             docker run -d --name register \
               -p 2001:2001 \
